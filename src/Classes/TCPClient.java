@@ -24,21 +24,21 @@ public class TCPClient {
 
                 boolean isFinished = false;
 
-                //System.out.println("isFinished " + isFinished);
+
 
                 while (!isFinished) {
 
-                  //  System.out.println("Зашел в вайл не фигишед");
+
 
                     socket = new Socket();
 
-                    //System.out.println("Создал новый сокет");
+
 
                     try {
-                      //  System.out.println("В трае у сокета");
+
                         socket.connect(new InetSocketAddress(InetAddress.getByName(Main.hostName), Main.port), 100000);
                         isFinished = true;
-                        //System.out.println("isFinished2 " + isFinished);
+
                     } catch (SocketTimeoutException | SocketException e) {
                         System.out.println("Клиент еще не подключился к серверу, но он пытается." + e.getMessage());
                         Thread.sleep(1000);
@@ -47,7 +47,7 @@ public class TCPClient {
                         System.exit(0);
                     }
 
-                   // System.out.println("Вышел из трая с сокетами");
+
                 }
 
                 System.out.println("Клиент подключился к серверу.");
@@ -66,18 +66,14 @@ public class TCPClient {
 
                         if (br.ready()) {
 
-                           // System.out.println("В бр ис реди");
 
-//                                System.out.println("Пробую считать клиентский ввод");
                                 String clientInput = br.readLine();
-  //                             System.out.println("Введен " + clientInput);
-
 
                             String clientCommand = "";
 
                            try {
                                clientCommand = getCommand(clientInput);
-                               //System.out.println("Полученная команада: " + clientCommand);
+
                            } catch (NullPointerException e){
                                System.out.println("Коллекция будет сохранена.");
                                clientCommand = "save";
@@ -88,83 +84,50 @@ public class TCPClient {
 
 
                             if (clientCommand != null) {
-                                //System.out.println("Если это был не нал");
+
                                 oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                              // System.out.println("Отправил в оос1");
+
+
                             } else {
                                 while (clientCommand == null) {
                                     System.out.println("Введенной команды не существует. Чтобы посмотреть список команд, введите help.");
                                     System.out.println("Введите новую команду: ");
                                     clientInput = br.readLine();
-                                    //System.out.println(clientInput);
+
                                     clientCommand = getCommand(clientInput);
                                 }
                                 oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                //System.out.println("Отправил в оос1, хотя раньше был нал");
+
+
                             }
 
-                            //System.out.println("Начинаю решать, отправлять ли объект");
+
 
                             if (clientCommand.equals("add") || clientCommand.equals("add_if_min") || clientCommand.equals("remove")) {
-                                //String [] s = clientInput.split("\\{");
-                                //String removedCommand = s [0];
+
                                 StringBuilder fullCommand = new StringBuilder(clientInput);
                                 String removedCommand = commandChecker(clientInput);
                                 String JSONString = fullCommand.toString().replaceFirst(removedCommand, "").trim();
                                 Shorty clientShorty = getShorty(JSONString);
-                                //System.out.println(clientShorty);
-                               // System.out.println("Собираюсь записать объект");
                                 oos2.writeObject(clientShorty);
-                                //System.out.println("Записали объект");
                             }
 
-                           // System.out.println("Клиент отправил сообщение серверу. ");
-                            //System.out.println("Ожидаем ответ от сервера...");
 
 
-// ждём чтобы сервер успел прочесть сообщение из сокета и ответить
-
-//                    if (clientCommand.equalsIgnoreCase("quit")) {
-//
-//// если условие выхода достигнуто разъединяемся
-//                        System.out.println("Client kill connections");
-//                        Thread.sleep(2000);
-//
-//// смотрим что нам ответил сервер на последок перед закрытием ресурсов
-//                        if (ois.read() > -1) {
-//                            System.out.println("reading...");
-//                            String in = ois.readUTF();
-//                            System.out.println(in);
-//                        }
-//
-//// после предварительных приготовлений выходим из цикла записи чтения
-//                        break;
-//                    }
                             if (!clientCommand.equals("quit")) {
-                               // System.out.println("Если это был не квит");
+
                                 while (ois.available() == 0) {
                                     Thread.sleep(100);
                                 }
 
-                                //System.out.println("Чтение ответа...");
+
                                 System.out.println(ois.readUTF());
                             } else {
-                                //System.out.println("Это был квит");
+
                                 toKillConnection = true;
-                                //System.out.println("ту кил коннекш" + toKillConnection);
+
                                 socket.close();
-                                //System.out.println("Сокет закрыли");
-                                //System.out.printf("trying to get out of here...");
+
                             }
 
                         }
