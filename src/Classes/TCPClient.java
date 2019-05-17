@@ -40,7 +40,7 @@ public class TCPClient {
                         isFinished = true;
 
                     } catch (SocketTimeoutException | SocketException e) {
-                        System.out.println("Клиент еще не подключился к серверу, но он пытается." + e.getMessage());
+                        System.out.println("Клиент еще не подключился к серверу, но он пытается.");
                         Thread.sleep(1000);
                     } catch (UnknownHostException e){
                         System.out.println("Произошла ошибка: " + e + ". Перезапустите приложение и укажите существующий сервер.");
