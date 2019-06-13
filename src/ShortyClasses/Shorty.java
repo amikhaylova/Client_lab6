@@ -1,4 +1,4 @@
-package Classes;
+package ShortyClasses;
 
 import Enums.ClothesTypes;
 import Enums.Colour;
@@ -10,7 +10,7 @@ import Interfaces.Huggable;
 import Interfaces.Interactable;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Shorty extends LivingCreature implements Interactable, Huggable, Comparable<Shorty>, Serializable {
@@ -21,7 +21,17 @@ public class Shorty extends LivingCreature implements Interactable, Huggable, Co
     private Clothes look;
     private double mass;
     private Coords coords;
-    private Long timeOfCreation = System.currentTimeMillis();
+    private LocalDateTime timeOfCreation;
+    private int shorty_id;
+    private String user_login;
+
+    public String getUser_login(){
+        return user_login;
+    }
+
+    public void setUser_login(String login){
+        this.user_login = login;
+    }
 
 
     public String getName() {
@@ -39,14 +49,24 @@ public class Shorty extends LivingCreature implements Interactable, Huggable, Co
     public Clothes getLook() {
         return look;
     }
+
     public Coords getCoords() {
         return coords;
     }
-    public Long getTimeOfCreation() {
+
+    public LocalDateTime getTimeOfCreation() {
         return timeOfCreation;
     }
 
-    public void setTimeOfCreation(Long timeOfCreation) {
+    public int getShorty_id(){
+        return shorty_id;
+    }
+
+    public void setShorty_id(int id){
+        this.shorty_id = id;
+    }
+
+    public void setTimeOfCreation(LocalDateTime timeOfCreation) {
         this.timeOfCreation = timeOfCreation;
     }
 
@@ -70,6 +90,15 @@ public class Shorty extends LivingCreature implements Interactable, Huggable, Co
         this.coords = coords;
     }
 
+    public void setMass (double mass){
+        this.mass = mass;
+    }
+
+   /* public String create_id(){
+        UUID uniqueKey = UUID.randomUUID();
+        return uniqueKey.toString();
+    }*/
+
     public Shorty() {
         super("Коротышка");
         this.name = "Неизвестный";
@@ -78,10 +107,14 @@ public class Shorty extends LivingCreature implements Interactable, Huggable, Co
         this.look = new Clothes(Colour.None, ClothesTypes.None);
         this.mass = this.getMass();
         this.coords = new Coords();
+        this.timeOfCreation = LocalDateTime.now();
+        //this.shorty_id = create_id();
     }
 
     public Shorty(String name, int budget, Currency currency, SocialStatus status) {
         super("Коротышка");
+        this.timeOfCreation = LocalDateTime.now();
+        //this.shorty_id = create_id();
         this.name = name;
         if (budget >= 0) {
             this.budget = new Money(currency, budget);
@@ -269,7 +302,7 @@ public class Shorty extends LivingCreature implements Interactable, Huggable, Co
             return false;
         } else {
             Shorty other = (Shorty) obj;
-            return ((this.name.equals(other.name)) && (this.budget.equals(other.budget)) && (this.status.equals(other.status)) && (this.look.equals(other.look)));
+            return ((this.name.equals(other.name)) && (this.budget.equals(other.budget)) && (this.status.equals(other.status)) && (this.look.equals(other.look)) && (this.coords.equals(other.coords)));
         }
 
     }
@@ -278,7 +311,7 @@ public class Shorty extends LivingCreature implements Interactable, Huggable, Co
     public String toString() {
         return (String.format("Имя: %s; Бюджет: (%s); Социальный статус: %s; Одежда: (%s); Масса: (%s); Дата создания объекта: (%s); Координаты: (%s) ",
                 this.name, this.budget, this.status.getLocalizedName(),
-                this.look, this.mass, new Date(this.timeOfCreation), this.coords));
+                this.look, this.mass, this.timeOfCreation, this.coords));
     }
 
     @Override

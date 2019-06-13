@@ -1,4 +1,4 @@
-package Classes;
+package ShortyClasses;
 
 import Enums.Currency;
 

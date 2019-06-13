@@ -1,8 +1,9 @@
-package Classes;
+package ShortyClasses;
 
 import Enums.ClothesTypes;
 import Enums.Colour;
 import Enums.Currency;
+import Enums.SocialStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -91,9 +92,9 @@ public class ShortyManager {
     }
 
     /**
-     * transforms JSONObject to instance of Classes.Shorty class
+     * transforms JSONObject to instance of ShortyClasses.Shorty class
      * @param shorty - JSONObject representation of shorty
-     * @return Classes.Shorty instance
+     * @return ShortyClasses.Shorty instance
      * @throws JSONException
      */
     private Shorty jsonToShorty(JSONObject shorty) throws JSONException {
@@ -103,20 +104,23 @@ public class ShortyManager {
             shortyForVector.setName(shorty.getString("name"));
         }
 
-        if (shorty.has("budget")){
-            JSONObject budget = (JSONObject) shorty.get("budget");
-            if (budget.has("amount")){
-                shortyForVector.getBudget().setAmount(budget.getInt("amount"));
+        try{
+            if (shorty.has("budget")) {
+                JSONObject budget = (JSONObject) shorty.get("budget");
+                if (budget.has("amount")) {
+                    shortyForVector.getBudget().setAmount(budget.getInt("amount"));
+                }
+                if (budget.has("currency")) {
+                    shortyForVector.getBudget().setCurrency(Currency.get(budget.getString("currency")));
+                }
             }
-            if (budget.has("currency")){
-                shortyForVector.getBudget().setCurrency(Currency.get(budget.getString("currency")) );
-            }
+        }catch (ClassCastException e){
+            System.out.println("Произошла ошибка: " + e.getMessage() + ". Было установлено значение по умолчанию.");
         }
 
-      /*  if (shorty.has("status")){
+        if (shorty.has("status")){
             shortyForVector.setStatus(SocialStatus.get(shorty.getString("status")));
         }
-*/
         if (shorty.has("look")){
             JSONObject look = (JSONObject) shorty.get("look");
             if(look.has("colour")){
@@ -127,11 +131,15 @@ public class ShortyManager {
             }
         }
 
-        if (shorty.has("coords")) {
-            JSONObject coords = (JSONObject) shorty.get("coords");
-            if (coords.has("x") && coords.has("x")) {
-                shortyForVector.setCoords(new Coords((Integer)coords.get("x"), (Integer)coords.get("y")));
+        try{
+            if (shorty.has("coords")) {
+                JSONObject coords = (JSONObject) shorty.get("coords");
+                if (coords.has("x") && coords.has("y")) {
+                    shortyForVector.setCoords(new Coords(coords.getInt("x"), coords.getInt("y")));
+                }
             }
+        }catch (ClassCastException e){
+            System.out.println("Произошла ошибка: " + e.getMessage() + ". Было установлено значение по умолчанию.");
         }
 
         return shortyForVector;
@@ -139,7 +147,7 @@ public class ShortyManager {
 
     /**
      * To add new element in the collection
-     * @param element string description of Classes.Shorty instance
+     * @param element string description of ShortyClasses.Shorty instance
      */
     public void add(String element) {
         try {
@@ -171,7 +179,7 @@ public class ShortyManager {
 
     /**
      * To remove the element from the collection using its' json string description
-     * @param element - string description of Classes.Shorty instance
+     * @param element - string description of ShortyClasses.Shorty instance
      */
     public void remove(String element) {
         try {
@@ -189,7 +197,7 @@ public class ShortyManager {
 
     /**
      * To add new element to the collection if its' value is less then the value of the least element in the collection
-     * @param element - JSON text description of Classes.Shorty instance
+     * @param element - JSON text description of ShortyClasses.Shorty instance
      */
     public void add_if_min(String element) {
         try {

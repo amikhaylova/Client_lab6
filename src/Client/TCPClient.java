@@ -1,5 +1,8 @@
-package Classes;
+package Client;
 
+import ShortyClasses.Coords;
+import Main.Main;
+import ShortyClasses.Shorty;
 import Enums.ClothesTypes;
 import Enums.Colour;
 import Enums.Currency;
@@ -9,8 +12,103 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
 public class TCPClient {
+
+    private String requested_command = " ";
+    private Shorty requested_shorty = null;
+    private boolean get_answer = false;
+
+    String login = "";
+    String state = "";
+    boolean is_authorized = false;
+    boolean is_registrated = false;
+    String password = "";
+    String email = "";
+    Scanner sc = new Scanner(System.in);
+    String answer = "";
+    String to_reg = "";
+
+    private void authorization (DataOutputStream oos, DataInputStream ois) throws IOException{
+        System.out.println("У вас уже есть аккаунт? (yes/no)");
+        if (sc.hasNextLine()){
+            String answer = sc.nextLine();
+            while(!(answer.equals("yes")||answer.equals("no"))){
+                System.out.println("Пожалуйста, введите yes или no.");
+                answer = sc.nextLine();
+            }if (answer.equals("yes")){
+                while(!is_authorized){
+                    authorize(oos,ois);
+                    if (to_reg.equals("yes")){
+                        answer = " ";
+                        to_reg = " ";
+                        break;
+                    }
+                }
+            }if (answer.equals("no")){
+                while(!is_registrated){
+                    registrate(oos, ois);
+                }
+                System.out.println("Авторизуйтесь, пожалуйста, с вашими новыми данными.");
+                while(!is_authorized){
+                    authorize(oos,ois);
+                    if (to_reg.equals("yes")){
+                        answer = " ";
+                        to_reg = " ";
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void authorize (DataOutputStream oos, DataInputStream ois) throws IOException{
+        state = "authorization";
+        write(oos, state);
+        System.out.println("Введите ваш логин:");
+        if (sc.hasNext()){
+            login = sc.nextLine();
+            write(oos, login);
+            answer = ois.readUTF();
+            if (answer.equals("Данного логина не существует.")){
+                System.out.println("Данного логина не существует.");
+                System.out.println("Хотите вернуться к главному меню? (yes/no)");
+                to_reg = sc.nextLine();
+                while(!(to_reg.equals("yes")||to_reg.equals("no"))){
+                    System.out.println("Пожалуйста, введите yes или no.");
+                    to_reg = sc.nextLine();
+                }
+                return;
+            }
+            System.out.println("Введите ваш пароль:");
+            password = sc.nextLine();
+            write (oos, password);
+            answer = ois.readUTF();
+            System.out.println(answer);
+            if (answer.equals("Авторизация прошла успешно")){
+                is_authorized = true;
+            }
+        }
+
+    }
+
+    private void registrate (DataOutputStream oos, DataInputStream ois) throws IOException{
+        state = "registration";
+        write(oos, state);
+        System.out.println("Введите логин, который хотите использовать для входа на сайт: ");
+        login = sc.nextLine();
+        System.out.println("Введите адрес электронной почты, на который необходимо отправить пароль: ");
+        email = sc.nextLine();
+        write(oos, login);
+        write(oos, email);
+        answer = ois.readUTF();
+        System.out.println(answer);
+        if(!answer.equals("Данный логин занят")){
+            is_registrated = true;
+        }
+    }
 
 
     public void start() throws InterruptedException, IOException {
@@ -20,25 +118,14 @@ public class TCPClient {
             while (!toKillConnection) {
 
                 Socket socket = null;
-
-
                 boolean isFinished = false;
 
-                //System.out.println("isFinished " + isFinished);
-
                 while (!isFinished) {
-
-                  //  System.out.println("Зашел в вайл не фигишед");
-
                     socket = new Socket();
 
-                    //System.out.println("Создал новый сокет");
-
                     try {
-                      //  System.out.println("В трае у сокета");
                         socket.connect(new InetSocketAddress(InetAddress.getByName(Main.hostName), Main.port), 100000);
                         isFinished = true;
-                        //System.out.println("isFinished2 " + isFinished);
                     } catch (SocketTimeoutException | SocketException e) {
                         System.out.println("Клиент еще не подключился к серверу, но он пытается.");
                         Thread.sleep(1000);
@@ -46,8 +133,6 @@ public class TCPClient {
                         System.out.println("Произошла ошибка: " + e + ". Перезапустите приложение и укажите существующий сервер.");
                         System.exit(0);
                     }
-
-                   // System.out.println("Вышел из трая с сокетами");
                 }
 
                 System.out.println("Клиент подключился к серверу.");
@@ -57,6 +142,26 @@ public class TCPClient {
                         ObjectOutputStream oos2 = new ObjectOutputStream(oos1);
                         DataInputStream ois = new DataInputStream(socket.getInputStream());) {
 
+                    String pr_login = login;
+
+                    while(!is_authorized){
+                        authorization(oos1,ois);
+                    }
+
+
+                    is_registrated = false;
+                    is_authorized = false;
+
+                    if (!requested_command.equals(" ") && !get_answer && (pr_login.equals(login))){
+                        get_answer = false;
+                        write(oos1,requested_command);
+                        if ((requested_command.equals("add"))||(requested_command.equals("add_if_min"))||(requested_command.equals("remove"))){
+                            oos2.writeObject(requested_shorty);
+                        }
+                        System.out.println("Ответ на последнюю запрошенную команду: ");
+                        System.out.println(ois.readUTF());
+                        get_answer = true;
+                    }
 
                     System.out.println("Введите команду: ");
 
@@ -65,19 +170,10 @@ public class TCPClient {
 
 
                         if (br.ready()) {
-
-                           // System.out.println("В бр ис реди");
-
-//                                System.out.println("Пробую считать клиентский ввод");
-                                String clientInput = br.readLine();
-  //                             System.out.println("Введен " + clientInput);
-
-
+                            String clientInput = br.readLine();
                             String clientCommand = "";
-
                            try {
                                clientCommand = getCommand(clientInput);
-                               //System.out.println("Полученная команада: " + clientCommand);
                            } catch (NullPointerException e){
                                System.out.println("Коллекция будет сохранена.");
                                clientCommand = "save";
@@ -87,84 +183,48 @@ public class TCPClient {
 
 
 
-                            if (clientCommand != null) {
-                                //System.out.println("Если это был не нал");
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                              // System.out.println("Отправил в оос1");
-                            } else {
+                            if ((clientCommand != null) && !clientCommand.equals("add") && !clientCommand.equals("add_if_min") && !clientCommand.equals("remove")) {
+                                requested_command = clientCommand;
+                                get_answer = false;
+                                write(oos1, clientCommand);
+                            } else if (clientCommand == null) {
                                 while (clientCommand == null) {
                                     System.out.println("Введенной команды не существует. Чтобы посмотреть список команд, введите help.");
                                     System.out.println("Введите новую команду: ");
                                     clientInput = br.readLine();
-                                    //System.out.println(clientInput);
                                     clientCommand = getCommand(clientInput);
                                 }
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                oos1.writeUTF(clientCommand);
-                                //System.out.println("Отправил в оос1, хотя раньше был нал");
+
+                                if (!clientCommand.equals("add") && !clientCommand.equals("add_if_min") && !clientCommand.equals("remove")){
+                                    requested_command = clientCommand;
+                                    get_answer = false;
+                                    write(oos1, clientCommand);
+                                }
                             }
 
-                            //System.out.println("Начинаю решать, отправлять ли объект");
 
                             if (clientCommand.equals("add") || clientCommand.equals("add_if_min") || clientCommand.equals("remove")) {
-                                //String [] s = clientInput.split("\\{");
-                                //String removedCommand = s [0];
                                 StringBuilder fullCommand = new StringBuilder(clientInput);
                                 String removedCommand = commandChecker(clientInput);
                                 String JSONString = fullCommand.toString().replaceFirst(removedCommand, "").trim();
                                 Shorty clientShorty = getShorty(JSONString);
-                                //System.out.println(clientShorty);
-                               // System.out.println("Собираюсь записать объект");
+                                requested_shorty = clientShorty;
+                                requested_command = clientCommand;
+                                get_answer = false;
+                                write(oos1, clientCommand);
                                 oos2.writeObject(clientShorty);
-                                //System.out.println("Записали объект");
                             }
 
-                           // System.out.println("Клиент отправил сообщение серверу. ");
-                            //System.out.println("Ожидаем ответ от сервера...");
 
-
-// ждём чтобы сервер успел прочесть сообщение из сокета и ответить
-
-//                    if (clientCommand.equalsIgnoreCase("quit")) {
-//
-//// если условие выхода достигнуто разъединяемся
-//                        System.out.println("Client kill connections");
-//                        Thread.sleep(2000);
-//
-//// смотрим что нам ответил сервер на последок перед закрытием ресурсов
-//                        if (ois.read() > -1) {
-//                            System.out.println("reading...");
-//                            String in = ois.readUTF();
-//                            System.out.println(in);
-//                        }
-//
-//// после предварительных приготовлений выходим из цикла записи чтения
-//                        break;
-//                    }
                             if (!clientCommand.equals("quit")) {
-                               // System.out.println("Если это был не квит");
                                 while (ois.available() == 0) {
                                     Thread.sleep(100);
                                 }
-
-                                //System.out.println("Чтение ответа...");
                                 System.out.println(ois.readUTF());
+                                get_answer = true;
                             } else {
-                                //System.out.println("Это был квит");
                                 toKillConnection = true;
-                                //System.out.println("ту кил коннекш" + toKillConnection);
                                 socket.close();
-                                //System.out.println("Сокет закрыли");
-                                //System.out.printf("trying to get out of here...");
                             }
 
                         }
@@ -276,9 +336,11 @@ public class TCPClient {
             if (shorty.has("coords")) {
                 JSONObject coords = (JSONObject) shorty.get("coords");
                 if (coords.has("x") && coords.has("y")) {
-                    shortyForClient.setCoords(new Coords((Integer) coords.get("x"), (Integer) coords.get("y")));
+                    shortyForClient.setCoords(new Coords(coords.getDouble("x"), coords.getDouble("y")));
                 }
             }
+
+            shortyForClient.setMass(shortyForClient.getMass());
 
             return shortyForClient;
 
@@ -288,4 +350,12 @@ public class TCPClient {
         }
     }
 
+    private void write (DataOutputStream oos, String string) throws IOException{
+        oos.writeUTF(string);
+        oos.writeUTF(string);
+        oos.writeUTF(string);
+        oos.writeUTF(string);
+        oos.writeUTF(string);
+        oos.writeUTF(string);
+    }
 }

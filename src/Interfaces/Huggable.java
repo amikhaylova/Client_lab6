@@ -1,6 +1,6 @@
 package Interfaces;
 
-import Classes.LivingCreature;
+import ShortyClasses.LivingCreature;
 
 public interface Huggable {
 

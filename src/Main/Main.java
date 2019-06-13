@@ -1,11 +1,14 @@
-package Classes;
+package Main;
+
+import Client.TCPClient;
 
 import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    static int port = -1;
-    static String hostName;
+
+public static int port = -1;
+    public static String hostName;
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         if (args.length!=2) {
@@ -44,7 +47,7 @@ public class Main {
             }
         }
 
-      //  sc.close();
+
 
         try {
             TCPClient client = new TCPClient();

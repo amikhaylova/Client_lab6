@@ -1,6 +1,6 @@
 package Exceptions;
 
-import Classes.LivingCreature;
+import ShortyClasses.LivingCreature;
 
 public class HugException extends RuntimeException {
 
